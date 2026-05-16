@@ -1,4 +1,4 @@
-const BACKEND_ORIGIN = process.env.BACKEND_URL || 'http://64.225.84.126:9090';
+const BACKEND_ORIGIN = process.env.BACKEND_URL || 'http://168.144.0.100:9090';
 
 export default async function handler(req, res) {
   const segments = req.query.path;
