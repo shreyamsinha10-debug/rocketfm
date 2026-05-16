@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UploadCloud, PlusCircle, Book, Music } from 'lucide-react';
-
-const API_BASE_URL = 'http://64.225.84.126:9090/api/v1';
+import { API_BASE_URL } from './apiConfig';
 
 // Reusable Input Component
 const FormInput = ({ label, id, ...props }) => (

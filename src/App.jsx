@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Menu, X, PlayCircle, PauseCircle, Mic, BookOpen, HeartPulse, Home, Radio, ListMusic, Plus, Clock, User, SkipBack, SkipForward, Volume2, Sun, Moon, Music, BarChart2, History, Calendar, PlusCircle, ArrowLeft } from 'lucide-react';
-
-const API_BASE_URL = 'http://64.225.84.126:9090/api/v1';
+import { API_BASE_URL } from './apiConfig';
 
 // Mock Data as a fallback in case of API failure
 const mockData = {
