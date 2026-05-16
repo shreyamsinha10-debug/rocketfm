@@ -208,7 +208,7 @@ function MainContentView({ onSelectSeries }) {
                 setTopArtists(artists.slice(0, 4));
             } catch (error) {
                 console.error("Failed to fetch data:", error);
-                setError("Could not load live data. Displaying sample content.");
+                setError("Could not load live data. The API server may be offline — check your droplet. Showing sample content.");
                 setTopCharts(mockData.topCharts); setUpcoming(mockData.upcoming); setTopArtists(mockData.topArtists);
             } finally { setLoading(false); }
         };
