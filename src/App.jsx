@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Menu, X, PlayCircle, PauseCircle, Mic, BookOpen, HeartPulse, Home, Radio, ListMusic, Plus, Clock, User, SkipBack, SkipForward, Volume2, Sun, Moon, Music, BarChart2, History, Calendar, PlusCircle, ArrowLeft } from 'lucide-react';
-import { API_BASE_URL } from './apiConfig';
+import { API_BASE_URL, proxyAssetUrl } from './apiConfig';
+
+const normalizeSeries = (series) => ({
+  ...series,
+  coverImage: proxyAssetUrl(series.coverImage),
+});
 
 // Mock Data as a fallback in case of API failure
 const mockData = {
@@ -24,7 +29,7 @@ const mockData = {
 const ContentCard = ({ item, onSelectSeries }) => (
   <div className="flex-shrink-0 w-40 sm:w-48 group cursor-pointer" onClick={() => onSelectSeries(item)}>
     <div className="relative mb-2">
-      <img src={item.coverImage || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=400&auto=format&fit=crop'} alt={item.title} className="w-full h-48 object-cover rounded-md shadow-lg transition-transform duration-300 group-hover:scale-105" />
+      <img src={proxyAssetUrl(item.coverImage) || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=400&auto=format&fit=crop'} alt={item.title} className="w-full h-48 object-cover rounded-md shadow-lg transition-transform duration-300 group-hover:scale-105" />
     </div>
     <div>
         <h3 className="font-semibold text-base text-text-primary truncate">{item.title}</h3>
@@ -35,7 +40,7 @@ const ContentCard = ({ item, onSelectSeries }) => (
 
 const UpcomingCard = ({ item, onSelectSeries }) => (
     <div className="relative group rounded-lg overflow-hidden cursor-pointer" onClick={() => onSelectSeries(item)}>
-        <img src={item.coverImage || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=400&auto=format&fit=crop'} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"/>
+        <img src={proxyAssetUrl(item.coverImage) || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=400&auto=format&fit=crop'} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"/>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
         <div className="absolute bottom-0 left-0 p-4">
             <h3 className="font-bold text-lg text-white">{item.title}</h3>
@@ -108,7 +113,7 @@ const AudioPlayer = ({ currentEpisode, currentSeries, isPlaying, onPlayPause, au
             <audio ref={audioRef} src={`${API_BASE_URL}/audio/stream/${currentEpisode.id}`} onTimeUpdate={onTimeUpdate} onLoadedMetadata={onLoadedMetadata} onEnded={onEnded}></audio>
             <div className="container mx-auto h-full flex items-center justify-between px-4">
                 <div className="flex items-center gap-4 w-1/4">
-                    <img src={currentSeries.coverImage} alt={currentSeries.title} className="w-14 h-14 rounded-md" />
+                    <img src={proxyAssetUrl(currentSeries.coverImage)} alt={currentSeries.title} className="w-14 h-14 rounded-md" />
                     <div><p className="font-bold text-sm">{currentEpisode.title}</p><p className="text-xs text-text-secondary">{currentSeries.title}</p></div>
                 </div>
                 <div className="flex flex-col items-center justify-center gap-2 w-1/2">
@@ -155,7 +160,7 @@ function SeriesDetailView({ series, onPlayEpisode, onBack }) {
             </button>
             <div className="flex flex-col md:flex-row gap-8">
                 <div className="md:w-1/3 flex-shrink-0">
-                    <img src={series.coverImage} alt={series.title} className="w-full h-auto rounded-lg shadow-lg" />
+                    <img src={proxyAssetUrl(series.coverImage)} alt={series.title} className="w-full h-auto rounded-lg shadow-lg" />
                     <h1 className="text-3xl font-bold text-text-primary mt-4">{series.title}</h1>
                     <p className="text-text-secondary mt-2">{series.author}</p>
                     <p className="text-sm text-text-secondary mt-4">{series.description}</p>
@@ -198,7 +203,7 @@ function MainContentView({ onSelectSeries }) {
             try { setLoading(true); setError(null);
                 const response = await fetch(`${API_BASE_URL}/series`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
+                const data = (await response.json()).map(normalizeSeries);
                 setTopCharts(data.slice(0, 5));
                 setUpcoming(data.slice(5, 7));
                 const artists = data.reduce((acc, series) => {
@@ -208,7 +213,7 @@ function MainContentView({ onSelectSeries }) {
                 setTopArtists(artists.slice(0, 4));
             } catch (error) {
                 console.error("Failed to fetch data:", error);
-                setError("Could not load live data. The API server may be offline — check your droplet. Showing sample content.");
+                setError("Could not load live data. Showing sample content.");
                 setTopCharts(mockData.topCharts); setUpcoming(mockData.upcoming); setTopArtists(mockData.topArtists);
             } finally { setLoading(false); }
         };
