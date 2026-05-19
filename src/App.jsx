@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, ChevronDown, Menu, X, PlayCircle, PauseCircle, Mic, BookOpen, HeartPulse, Home, Radio, ListMusic, Plus, Clock, User, SkipBack, SkipForward, Volume2, Sun, Moon, Music, BarChart2, History, Calendar, PlusCircle, ArrowLeft } from 'lucide-react';
 import { API_BASE_URL, proxyAssetUrl } from './apiConfig';
 
@@ -93,7 +94,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => (
     <aside className={`fixed top-0 left-0 h-full bg-bg-primary border-r border-border text-text-secondary p-6 space-y-4 z-50 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 lg:w-64 transition-transform duration-300 flex flex-col`}>
         <div className="flex justify-between items-center lg:hidden"><a href="/" className="text-2xl font-bold text-text-primary tracking-tighter"><span className="text-accent">Rocket</span><span>FM</span></a><button onClick={() => setIsOpen(false)} className="text-text-primary"><X size={24} /></button></div>
         <nav className="space-y-1 pt-12"><a href="#" className="flex items-center gap-4 px-3 py-2 rounded-md text-sm font-bold bg-bg-hover text-text-primary"><Home size={20} /> Home</a><a href="#" className="flex items-center gap-4 px-3 py-2 rounded-md text-sm font-bold hover:bg-bg-hover hover:text-text-primary transition-colors"><Radio size={20} /> Genres</a><a href="#" className="flex items-center gap-4 px-3 py-2 rounded-md text-sm font-bold hover:bg-bg-hover hover:text-text-primary transition-colors"><Music size={20} /> Music</a></nav>
-        <div className="mt-auto"><a href="/admin" className="w-full bg-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"><Music size={20} /> Admin Panel</a></div>
+        <div className="mt-auto"><Link to="/admin" className="w-full bg-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"><Music size={20} /> Admin Panel</Link></div>
     </aside>
 );
 
