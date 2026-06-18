@@ -42,12 +42,18 @@ const CreateCategoryForm = ({ setStatusMessage }) => {
         setStatusMessage({ text: 'Creating category...', type: 'info' });
 
         try {
+            const categoryRequest = { categoryName, categoryCode, description };
+            const formData = new FormData();
+            formData.append('category', new Blob([JSON.stringify(categoryRequest)], { type: 'application/json' }));
+
             const response = await fetch(`${API_BASE_URL}/categories`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoryName, categoryCode, description })
+                body: formData,
             });
-            if (!response.ok) throw new Error('Failed to create category');
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || err.businessErrorDescription || 'Failed to create category');
+            }
             setStatusMessage({ text: 'Category created successfully!', type: 'success' });
             setCategoryName(''); setCategoryCode(''); setDescription('');
         } catch (error) {
