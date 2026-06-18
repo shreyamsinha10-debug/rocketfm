@@ -157,11 +157,12 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
         const formData = new FormData();
         formData.append('file', audioFile);
 
-        const url = new URL(`${API_BASE_URL}/audio/upload`);
-        url.searchParams.append('seriesId', seriesId);
-        url.searchParams.append('title', title);
-        url.searchParams.append('description', description);
-        url.searchParams.append('episodeNumber', episodeNumber);
+        const params = new URLSearchParams();
+        params.append('seriesId', seriesId);
+        params.append('title', title);
+        params.append('description', description);
+        params.append('episodeNumber', episodeNumber);
+        const url = `${API_BASE_URL}/audio/upload?${params.toString()}`;
 
         try {
             const controller = new AbortController();
