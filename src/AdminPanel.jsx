@@ -126,8 +126,9 @@ const CreateSeriesForm = ({ categories, setStatusMessage }) => {
 };
 
 // Component to Upload an Audio Episode
-const MAX_UPLOAD_MB = 4;
+const MAX_UPLOAD_MB = 100;
 const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 5 * 60 * 1000;
 
 const UploadAudioForm = ({ series, setStatusMessage }) => {
     const [seriesId, setSeriesId] = useState('');
@@ -145,7 +146,7 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
         }
         if (audioFile.size > MAX_UPLOAD_BYTES) {
             setStatusMessage({
-                text: `File is too large (${(audioFile.size / 1024 / 1024).toFixed(1)} MB). Production uploads are limited to ${MAX_UPLOAD_MB} MB on Vercel.`,
+                text: `File is too large (${(audioFile.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed size is ${MAX_UPLOAD_MB} MB.`,
                 type: 'error',
             });
             return;
@@ -166,7 +167,7 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
 
         try {
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 55000);
+            const timeout = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -185,7 +186,7 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
                     if (errText && !errText.includes('<!DOCTYPE')) message = errText;
                 }
                 if (response.status === 413) {
-                    message = `File too large for Vercel (max ${MAX_UPLOAD_MB} MB). Try a smaller audio file.`;
+                    message = `File too large (max ${MAX_UPLOAD_MB} MB on server).`;
                 }
                 throw new Error(message);
             }
@@ -223,7 +224,7 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
             <button type="submit" disabled={uploading} className="w-full bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 {uploading ? 'Uploading...' : 'Upload Audio'}
             </button>
-            <p className="text-xs text-text-secondary">Max file size on production: {MAX_UPLOAD_MB} MB</p>
+            <p className="text-xs text-text-secondary">Max file size: {MAX_UPLOAD_MB} MB. Large uploads may take a few minutes.</p>
         </form>
     );
 };
