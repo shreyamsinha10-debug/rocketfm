@@ -126,12 +126,16 @@ const CreateSeriesForm = ({ categories, setStatusMessage }) => {
 };
 
 // Component to Upload an Audio Episode
+const MAX_UPLOAD_MB = 4;
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+
 const UploadAudioForm = ({ series, setStatusMessage }) => {
     const [seriesId, setSeriesId] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [episodeNumber, setEpisodeNumber] = useState('');
     const [audioFile, setAudioFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -139,6 +143,15 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
             setStatusMessage({ text: 'Please select a series and an audio file.', type: 'error' });
             return;
         }
+        if (audioFile.size > MAX_UPLOAD_BYTES) {
+            setStatusMessage({
+                text: `File is too large (${(audioFile.size / 1024 / 1024).toFixed(1)} MB). Production uploads are limited to ${MAX_UPLOAD_MB} MB on Vercel.`,
+                type: 'error',
+            });
+            return;
+        }
+
+        setUploading(true);
         setStatusMessage({ text: 'Uploading audio...', type: 'info' });
 
         const formData = new FormData();
@@ -149,17 +162,46 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
         url.searchParams.append('title', title);
         url.searchParams.append('description', description);
         url.searchParams.append('episodeNumber', episodeNumber);
-        
+
         try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 55000);
+
             const response = await fetch(url, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                signal: controller.signal,
             });
-            if (!response.ok) throw new Error('Failed to upload audio');
+            clearTimeout(timeout);
+
+            if (!response.ok) {
+                const errText = await response.text();
+                let message = `Upload failed (${response.status})`;
+                try {
+                    const err = JSON.parse(errText);
+                    message = err.error || err.businessErrorDescription || message;
+                } catch {
+                    if (errText && !errText.includes('<!DOCTYPE')) message = errText;
+                }
+                if (response.status === 413) {
+                    message = `File too large for Vercel (max ${MAX_UPLOAD_MB} MB). Try a smaller audio file.`;
+                }
+                throw new Error(message);
+            }
+
             setStatusMessage({ text: 'Audio uploaded successfully!', type: 'success' });
-            setSeriesId(''); setTitle(''); setDescription(''); setEpisodeNumber(''); setAudioFile(null);
+            setSeriesId('');
+            setTitle('');
+            setDescription('');
+            setEpisodeNumber('');
+            setAudioFile(null);
         } catch (error) {
-            setStatusMessage({ text: error.message, type: 'error' });
+            const message = error.name === 'AbortError'
+                ? 'Upload timed out. Try a smaller file or check your connection.'
+                : error.message || 'Failed to upload audio';
+            setStatusMessage({ text: message, type: 'error' });
+        } finally {
+            setUploading(false);
         }
     };
     
@@ -177,7 +219,10 @@ const UploadAudioForm = ({ series, setStatusMessage }) => {
             <FormInput label="Episode Description" id="episodeDescription" type="text" value={description} onChange={(e) => setDescription(e.target.value)} required />
             <FormInput label="Episode Number" id="episodeNumber" type="number" value={episodeNumber} onChange={(e) => setEpisodeNumber(e.target.value)} required />
             <FileInput label="Audio File" id="audioFile" file={audioFile} setFile={setAudioFile} accept="audio/*" required />
-            <button type="submit" className="w-full bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">Upload Audio</button>
+            <button type="submit" disabled={uploading} className="w-full bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                {uploading ? 'Uploading...' : 'Upload Audio'}
+            </button>
+            <p className="text-xs text-text-secondary">Max file size on production: {MAX_UPLOAD_MB} MB</p>
         </form>
     );
 };
@@ -208,10 +253,11 @@ export default function AdminPanel() {
     fetchData();
   }, []);
   
-  // Effect to clear status message after a few seconds
+  // Effect to clear status message after a few seconds (keep errors longer)
   useEffect(() => {
     if (statusMessage.text) {
-        const timer = setTimeout(() => setStatusMessage({ text: '', type: '' }), 5000);
+        const delay = statusMessage.type === 'error' ? 12000 : 5000;
+        const timer = setTimeout(() => setStatusMessage({ text: '', type: '' }), delay);
         return () => clearTimeout(timer);
     }
   }, [statusMessage]);
