@@ -16,8 +16,10 @@ const STRIP_HEADERS = new Set([
 
 export default async function handler(req, res) {
   const url = new URL(req.url, 'http://localhost');
-  const apiPath = url.pathname.replace(/^\/api\/proxy\/?/, '');
-  const targetUrl = `${BACKEND_ORIGIN}/api/v1/${apiPath}${url.search}`;
+  const target = url.searchParams.get('target') || '';
+  url.searchParams.delete('target');
+  const query = url.searchParams.toString();
+  const targetUrl = `${BACKEND_ORIGIN}/api/v1/${target}${query ? `?${query}` : ''}`;
 
   const headers = {};
   for (const [key, value] of Object.entries(req.headers)) {
