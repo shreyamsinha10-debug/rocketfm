@@ -36,15 +36,22 @@ const CreateCategoryForm = ({ setStatusMessage }) => {
     const [categoryName, setCategoryName] = useState('');
     const [categoryCode, setCategoryCode] = useState('');
     const [description, setDescription] = useState('');
+    const [coverImage, setCoverImage] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!coverImage) {
+            setStatusMessage({ text: 'Please select a cover image for the category.', type: 'error' });
+            return;
+        }
+
         setStatusMessage({ text: 'Creating category...', type: 'info' });
 
         try {
             const categoryRequest = { categoryName, categoryCode, description };
             const formData = new FormData();
             formData.append('category', new Blob([JSON.stringify(categoryRequest)], { type: 'application/json' }));
+            formData.append('coverImage', coverImage);
 
             const response = await fetch(`${API_BASE_URL}/categories`, {
                 method: 'POST',
@@ -55,7 +62,10 @@ const CreateCategoryForm = ({ setStatusMessage }) => {
                 throw new Error(err.error || err.businessErrorDescription || 'Failed to create category');
             }
             setStatusMessage({ text: 'Category created successfully!', type: 'success' });
-            setCategoryName(''); setCategoryCode(''); setDescription('');
+            setCategoryName('');
+            setCategoryCode('');
+            setDescription('');
+            setCoverImage(null);
         } catch (error) {
             setStatusMessage({ text: error.message, type: 'error' });
         }
@@ -67,6 +77,7 @@ const CreateCategoryForm = ({ setStatusMessage }) => {
             <FormInput label="Category Name" id="categoryName" type="text" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} required />
             <FormInput label="Category Code" id="categoryCode" type="text" value={categoryCode} onChange={(e) => setCategoryCode(e.target.value)} required />
             <FormInput label="Description" id="description" type="text" value={description} onChange={(e) => setDescription(e.target.value)} required />
+            <FileInput label="Category Cover Image" id="categoryCoverImage" file={coverImage} setFile={setCoverImage} accept="image/*" required />
             <button type="submit" className="w-full bg-accent text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 transition-colors">Create Category</button>
         </form>
     );
